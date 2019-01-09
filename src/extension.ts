@@ -7,7 +7,9 @@ const window = vscode.window;
 const workspace = vscode.workspace;
 const settings = workspace.getConfiguration('mongodb');
 
-import * as restClient from './rest_client';
+import { StitchRestClient } from './stitch_rest_client';
+
+var client : StitchRestClient;
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -41,7 +43,18 @@ export function activate(context: vscode.ExtensionContext) {
 		return;
 	}
 
-	restClient.authorize();
+	client = new StitchRestClient();
+	client.authorize()
+		.then(response => {
+				client.getFunctions(response)
+					.then()
+					.catch(message => {
+						window.showErrorMessage(message);
+					});
+		})
+		.catch(message => {
+			window.showErrorMessage(message);
+		});
 
 	vscode.window.registerTreeDataProvider('nodeDependencies', new DepNodeProvider('/Users/alex/Workspace/vscode-mongodb-stitch'));
 
