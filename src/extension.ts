@@ -1,7 +1,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import { DepNodeProvider } from './node_dependencies';
+import { StitchTreeData } from './stitch_tree_data';
 
 const window = vscode.window;
 const workspace = vscode.workspace;
@@ -24,7 +24,7 @@ export function activate(context: vscode.ExtensionContext) {
 		return;
 	}
 
-	if (settings.get("atlas.project_id") == "") {
+	if (settings.get("atlas.project_id") === "") {
 		window
 			.showErrorMessage("No MongoDB Atlas Project/Group Id defined", "See Documentation")
 			.then(function() {
@@ -47,7 +47,9 @@ export function activate(context: vscode.ExtensionContext) {
 	client.authorize()
 		.then(response => {
 				client.getFunctions(response)
-					.then()
+					.then(functions => {
+						vscode.window.registerTreeDataProvider('stitchTreeData', new StitchTreeData(functions));
+					})
 					.catch(message => {
 						window.showErrorMessage(message);
 					});
@@ -55,9 +57,6 @@ export function activate(context: vscode.ExtensionContext) {
 		.catch(message => {
 			window.showErrorMessage(message);
 		});
-
-	vscode.window.registerTreeDataProvider('nodeDependencies', new DepNodeProvider('/Users/alex/Workspace/vscode-mongodb-stitch'));
-
 }
 
 function gotoUrl(url: string)  {

@@ -57,8 +57,8 @@
 		"views": {
 			"explorer": [
 				{
-					"id": "nodeDependencies",
-					"name": "Node Dependencies"
+					"id": "stitchTreeData",
+					"name": "MongoDB Stitch"
 				}
 			]
 		}
