@@ -2,7 +2,7 @@
 
 This extension allows you to interact with your MongoDB Stitch applications directly from vscode.
 
-![](docs/ss01.png)
+![](docs/ss02.png)
 
 **This extension is not officially developed or supported by MongoDB Inc.**
 
@@ -10,7 +10,7 @@ This extension allows you to interact with your MongoDB Stitch applications dire
 
 Functions
 - [x] List
-- [ ] Load
+- [x] Load
 - [ ] Save
 
 Values
@@ -56,6 +56,7 @@ Users appreciate release notes as you update your extension.
 
 * Configuration sections added
 * Initial function list can be populated
+* Clicking on a function from the list loads the contents into an editor
 
 ---
 

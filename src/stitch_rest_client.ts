@@ -5,7 +5,22 @@ const Client = require('node-rest-client').Client;
 const client = new Client();
 
 export class StitchRestClient {
-  constructor() { }
+  constructor() {
+    this._authPayload = {};
+  }
+
+  private _authPayload: object;
+
+  // FIXME initialized _authPayload to {}, but need a way to check
+  // if it's been assigned and {} === {} won't work
+  private isEmpty(obj: object): boolean {
+    for(var key in obj) {
+        if(obj.hasOwnProperty(key)) {
+          return false;
+        }
+    }
+    return true;
+  }
 
   /**
    * Create the request arguments sent to the Authorization API used
@@ -45,12 +60,14 @@ export class StitchRestClient {
    *
    * @returns an access token object
    */
-  async authorize(payload: any = null): Promise<any> {
+  async authorize(): Promise<any> {
     return new Promise((resolve, reject) => {
-      if (payload === null) {
+      if (this.isEmpty(this._authPayload)) {
+        var self = this;
         client.post(STITCH_API_BASE_URL + "/auth/providers/mongodb-cloud/login",
           this.getRequestArgs(), function(data: any, response: any) {
             if (response.statusCode === 200) {
+              self._authPayload = data;
               return resolve(data);
             } else {
               return reject(data.error);
@@ -60,15 +77,30 @@ export class StitchRestClient {
     });
   }
 
-  async getFunctions(payload: any): Promise<any> {
+  private getFunctionsBaseUrl(): string {
     var projectId = vscode.workspace.getConfiguration('mongodb').get("atlas.project_id");
     var appId = vscode.workspace.getConfiguration('mongodb').get("stitch.app_id");
 
-    const url = "/groups/" + projectId + "/apps/" + appId + "/functions";
+    return STITCH_API_BASE_URL + "/groups/" + projectId + "/apps/" + appId + "/functions";
+  }
 
+  async getFunctions(): Promise<any> {
+   return new Promise((resolve, reject) => {
+      client.get(this.getFunctionsBaseUrl(),
+        this.getRequestArgsAuthorized(this._authPayload), function(data: any, response: any) {
+          if (response.statusCode === 200) {
+            return resolve(data);
+          } else {
+            return reject(data.error);
+          }
+      });
+    });
+  }
+
+  async getFunction(functionId: string): Promise<any> {
     return new Promise((resolve, reject) => {
-      client.get(STITCH_API_BASE_URL + url,
-        this.getRequestArgsAuthorized(payload), function(data: any, response: any) {
+      client.get(`${this.getFunctionsBaseUrl()}/${functionId}`,
+        this.getRequestArgsAuthorized(this._authPayload), function(data: any, response: any) {
           if (response.statusCode === 200) {
             return resolve(data);
           } else {

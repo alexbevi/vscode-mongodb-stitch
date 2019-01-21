@@ -8,6 +8,7 @@ const workspace = vscode.workspace;
 const settings = workspace.getConfiguration('mongodb');
 
 import { StitchRestClient } from './stitch_rest_client';
+import * as path from 'path';
 
 var client : StitchRestClient;
 
@@ -46,9 +47,9 @@ export function activate(context: vscode.ExtensionContext) {
 	client = new StitchRestClient();
 	client.authorize()
 		.then(response => {
-				client.getFunctions(response)
+				client.getFunctions()
 					.then(functions => {
-						vscode.window.registerTreeDataProvider('stitchTreeData', new StitchTreeData(functions));
+						vscode.window.registerTreeDataProvider('stitchTreeData', new StitchTreeData(functions, client));
 					})
 					.catch(message => {
 						window.showErrorMessage(message);
@@ -57,6 +58,28 @@ export function activate(context: vscode.ExtensionContext) {
 		.catch(message => {
 			window.showErrorMessage(message);
 		});
+
+		vscode.commands.registerCommand('mongodb.stitch.openFunction', handleFileOpenFromStitch);
+
+}
+
+// FIXME: files being temporarily created under /tmp
+// FIXME: no save handler
+// FIXME: edit.insert doesn't clear the file first so keeps appending content
+function handleFileOpenFromStitch(client: StitchRestClient, functionId: string) {
+	client.getFunction(functionId).then(func => {
+		const newFile = vscode.Uri.parse('untitled:' + path.join("/tmp", func.name + ".js"));
+		vscode.workspace.openTextDocument(newFile).then(async document => {
+			const edit = new vscode.WorkspaceEdit();
+			edit.insert(newFile, new vscode.Position(0, 0), func.source);
+			const success = await vscode.workspace.applyEdit(edit);
+			if (success) {
+				vscode.window.showTextDocument(document);
+			} else {
+				vscode.window.showInformationMessage('Error!');
+			}
+		});
+	});
 }
 
 function gotoUrl(url: string)  {
